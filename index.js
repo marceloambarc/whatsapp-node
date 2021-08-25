@@ -5,6 +5,8 @@ const cors = require('cors');
 const axios = require('axios');
 const wbm = require('wbm');
 
+import { link } from './services/credentials';
+
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
@@ -13,29 +15,40 @@ app.get('/', function (req,res){
     res.send(`<p>Hello World!<p/>`);
 });
 
-app.post('/whatsgun', async function (req,res){
-  const companies = await axios.get('http://177.10.0.125:5001/v1/companies/all');
-  var { toSend } = req.body;
-  try {
-
+app.get('/whatsgun', function(req, res){
     wbm.start().then(async wbmResponse => {
-      res.send(`<img src=${wbmResponse} alt="qrCode" />`);
-      await wbm.waitQRCode();
+      return res.json({wbmResponse});
+    }).catch(() => {
+      return res.sendStatus(400).json({'Erro':'Problemas em Gerar QRCODE'});
+    });
+});
 
-      for (var i = 0; i < companies.data.length; i++){
-        const responsePhone = (companies.data[i].phone).split('(51) 9').join('5551').replace(/\D/g, "");
+async function sendMessages(a) {
+  const companies = await axios.get(`${link}`);
+  for (var i = 0; i < companies.data.length; i++){
+    const responsePhone = (companies.data[i].phone).split('(51) 9').join('5551').replace(/\D/g, "");
 
-        const phones = [`${responsePhone}`];
-        const message = `${toSend}`;
-        await wbm.send(phones, message);
-      }
-
-      await wbm.end();
-    }).catch(err => console.log(err));
-
-  } catch(err) {
-    console.log(err);
+    const phones = [`555196156020`];
+    const message = `${a}`;
+    await wbm.send(phones, message);
   }
+
+  await wbm.end();
+}
+
+app.post('/whatsgun', async function(req, res) {
+  const companies = await axios.get(`${link}`);
+    var { toSend } = req.body;
+    try {
+      const waitQrCodeResponse = await wbm.waitQRCode();
+      sendMessages(toSend)
+      return res.json(companies.data.length);
+    }catch(err) {
+      console.log(err);
+      res.sendStatus(400);
+    }
+
+
 });
 
 app.post('/mailgun', function (req, res){
@@ -66,6 +79,6 @@ app.post('/mailgun', function (req, res){
   res.sendStatus(200);
 });
 
-app.listen(3000,() => {
+app.listen(3030,() => {
   console.log('Server On');
 });
