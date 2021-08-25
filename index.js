@@ -5,7 +5,7 @@ const cors = require('cors');
 const axios = require('axios');
 const wbm = require('wbm');
 
-import { link } from './services/credentials';
+const link = require('./services/credentials');
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -37,6 +37,7 @@ async function sendMessages(a) {
 }
 
 app.post('/whatsgun', async function(req, res) {
+  console.log(link);
   const companies = await axios.get(`${link}`);
     var { toSend } = req.body;
     try {
