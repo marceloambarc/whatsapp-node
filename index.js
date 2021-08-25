@@ -28,7 +28,7 @@ async function sendMessages(a) {
   for (var i = 0; i < companies.data.length; i++){
     const responsePhone = (companies.data[i].phone).split('(51) 9').join('5551').replace(/\D/g, "");
 
-    const phones = [`555196156020`];
+    const phones = [{responsePhone}];
     const message = `${a}`;
     await wbm.send(phones, message);
   }
